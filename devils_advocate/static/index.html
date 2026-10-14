@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>악마의 변호인</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>😈</text></svg>">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">😈</span>
+      <div>
+        <h1>악마의 변호인</h1>
+        <p class="sub">대표의 결정에 가장 논리적인 반론을 제기합니다</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" role="tab" data-tab="live" aria-selected="true">🎙 실시간 회의</button>
+      <button class="tab" role="tab" data-tab="analyze" aria-selected="false">📄 회의록 분석</button>
+    </nav>
+    <div id="server-status" class="server-status" aria-live="polite"></div>
+  </header>
+
+  <main>
+    <details class="panel settings" id="settings" open>
+      <summary>⚙️ 설정</summary>
+      <div class="settings-grid">
+        <fieldset>
+          <legend>반박 강도</legend>
+          <div class="segmented" id="intensity">
+            <label><input type="radio" name="intensity" value="mild"> 순한맛</label>
+            <label><input type="radio" name="intensity" value="medium"> 보통맛</label>
+            <label><input type="radio" name="intensity" value="spicy" checked> 매운맛</label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>반박 대상 <span class="hint">(실시간 회의)</span></legend>
+          <div class="segmented" id="target-mode">
+            <label><input type="radio" name="target" value="auto" checked> 자동</label>
+            <label><input type="radio" name="target" value="manual"> 수동</label>
+          </div>
+          <p class="hint" id="target-hint"></p>
+        </fieldset>
+        <fieldset class="wide">
+          <legend>회사 맥락 <span class="hint">(선택)</span></legend>
+          <textarea id="company-context" rows="3" maxlength="4000"
+            placeholder="예: 직원 12명 소프트웨어 회사. 현금으로 약 9개월 운영 가능. 올해 목표는 첫 기업 고객 5곳 확보."></textarea>
+        </fieldset>
+        <fieldset>
+          <legend>소리</legend>
+          <label class="check"><input type="checkbox" id="tts"> 새 반론을 소리 내어 읽기</label>
+        </fieldset>
+      </div>
+    </details>
+
+    <!-- 실시간 회의 -->
+    <section id="tab-live" class="tab-panel" role="tabpanel">
+      <div class="controls">
+        <button id="btn-mic" class="btn primary">🎙 회의 시작</button>
+        <button id="btn-ceo" class="btn toggle" aria-pressed="false" disabled>👔 대표 발언 중</button>
+        <button id="btn-now" class="btn accent" disabled>⚡ 지금 반박</button>
+        <button id="btn-export" class="btn ghost" disabled>💾 기록 저장</button>
+        <span id="live-status" class="live-status" aria-live="polite">대기 중</span>
+      </div>
+      <p id="speech-warning" class="notice" hidden>
+        이 브라우저는 음성 인식을 지원하지 않습니다. Google Chrome에서 열거나, 아래 입력창에 발언을 직접 입력하세요.
+      </p>
+
+      <div class="live-grid">
+        <div class="panel transcript-panel">
+          <h2>발언 기록</h2>
+          <ol id="transcript" class="transcript"></ol>
+          <p id="interim" class="interim"></p>
+          <form id="manual-form" class="manual-form">
+            <input id="manual-text" type="text" placeholder="발언 직접 입력 (Enter)" autocomplete="off">
+            <label class="check small"><input type="checkbox" id="manual-ceo"> 대표 발언</label>
+            <button class="btn small" type="submit">추가</button>
+          </form>
+        </div>
+        <div class="panel cards-panel">
+          <h2>반론 카드</h2>
+          <div id="cards" class="cards">
+            <p class="empty">회의를 시작하면 대표의 결정이 나올 때 반론이 여기에 나타납니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 회의록 분석 -->
+    <section id="tab-analyze" class="tab-panel" role="tabpanel" hidden>
+      <div class="panel">
+        <h2>회의록 넣기</h2>
+        <p class="hint">클로바노트·Zoom·Teams에서 내보낸 회의록(.txt, .vtt, .srt)을 넣거나 아래에 붙여 넣으세요.</p>
+        <div class="controls">
+          <label class="btn ghost file-btn">📂 파일 선택
+            <input id="file-input" type="file" accept=".txt,.vtt,.srt,text/plain,text/vtt">
+          </label>
+          <button id="btn-sample" class="btn ghost">📋 예시 회의록</button>
+          <span id="file-name" class="hint"></span>
+        </div>
+        <textarea id="transcript-input" rows="12" placeholder="회의록 내용"></textarea>
+        <div class="controls">
+          <label for="ceo-speaker">대표 화자</label>
+          <select id="ceo-speaker">
+            <option value="">자동 판단</option>
+          </select>
+          <button id="btn-analyze" class="btn primary">😈 반론 리포트 만들기</button>
+          <span id="analyze-status" class="live-status" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <div id="report" class="panel report" hidden>
+        <div class="report-head">
+          <h2>반론 리포트</h2>
+          <div class="controls">
+            <button id="btn-save-md" class="btn ghost">💾 마크다운 저장</button>
+            <button id="btn-print" class="btn ghost">🖨 인쇄</button>
+          </div>
+        </div>
+        <h3>회의 요약</h3>
+        <p id="report-summary"></p>
+        <h3 id="report-cards-title">반론</h3>
+        <div id="report-cards" class="cards"></div>
+        <h3>총평</h3>
+        <p id="report-overall"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    반론은 판단 재료입니다. 최종 판단은 사람이 합니다. · 음성은 Google(Chrome 음성 인식), 텍스트는 Anthropic으로 전송됩니다.
+  </footer>
+
+  <template id="card-template">
+    <article class="card">
+      <header class="card-head">
+        <span class="badge"></span>
+        <span class="severity" title="심각도"></span>
+        <time class="when"></time>
+      </header>
+      <p class="decision"></p>
+      <details class="steelman-box">
+        <summary>대표 논리의 최강 버전</summary>
+        <p class="steelman"></p>
+      </details>
+      <div class="block weakest">
+        <h4>가장 약한 가정</h4>
+        <p class="weakest-text"></p>
+      </div>
+      <div class="block">
+        <h4>반론 포인트</h4>
+        <ul class="points"></ul>
+      </div>
+      <div class="block question">
+        <h4>지금 던질 질문</h4>
+        <p class="question-text"></p>
+      </div>
+      <div class="block">
+        <h4>대안</h4>
+        <ul class="alternatives"></ul>
+      </div>
+      <div class="block concede">
+        <h4>이게 확인되면 인정</h4>
+        <p class="concede-text"></p>
+      </div>
+    </article>
+  </template>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+[project]
+name = "devils-advocate"
+version = "0.1.0"
+description = "회의 중 대표의 결정에 가장 논리적인 반론을 제기하는 AI 에이전트"
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic>=1.13.0,<2",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "python-dotenv>=1.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["devils_advocate*"]
+
+[tool.setuptools.package-data]
+devils_advocate = ["static/*", "samples/*.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
